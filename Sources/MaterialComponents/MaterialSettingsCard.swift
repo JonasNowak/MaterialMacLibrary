@@ -95,13 +95,19 @@ public struct MaterialSegmentedControl<T: Hashable & Equatable>: View {
     }
 
     public var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 3) {
             ForEach(0..<options.count, id: \.self) { idx in
                 let item = options[idx]
                 let isSelected = selection == item.value
+                let isFirst = idx == 0
+                let isLast = idx == options.count - 1
+                let outerR: CGFloat = 10
+                let innerR: CGFloat = isSelected ? 10 : 4
 
                 Button(action: {
-                    selection = item.value
+                    withAnimation(theme.fastSpatialAnimation) {
+                        selection = item.value
+                    }
                 }) {
                     HStack(spacing: 5) {
                         if isSelected {
@@ -113,21 +119,29 @@ public struct MaterialSegmentedControl<T: Hashable & Equatable>: View {
                             .font(.system(size: 11, weight: isSelected ? .bold : .medium))
                             .foregroundColor(isSelected ? p.onPrimaryContainerColor : p.onSurfaceVariantColor)
                     }
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, isSelected ? 12 : 10)
                     .padding(.vertical, 6)
                     .background(
                         isSelected
                             ? p.primaryContainerColor
                             : p.surfaceContainerLowColor.opacity(0.6)
                     )
-                    .cornerRadius(8)
+                    .clipShape(
+                        UnevenRoundedRectangle(
+                            topLeadingRadius: isFirst ? outerR : innerR,
+                            bottomLeadingRadius: isFirst ? outerR : innerR,
+                            bottomTrailingRadius: isLast ? outerR : innerR,
+                            topTrailingRadius: isLast ? outerR : innerR
+                        )
+                    )
+                    .animation(theme.fastSpatialAnimation, value: isSelected)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(3)
         .background(p.surfaceContainerLowColor)
-        .cornerRadius(10)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 

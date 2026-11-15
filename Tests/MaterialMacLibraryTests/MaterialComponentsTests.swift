@@ -592,5 +592,94 @@ struct MaterialThemePropagationTests {
         #expect(theme.cornerRadius(base: 14) == 14)
         theme.shapeTokens = MaterialShapeTokens(strength: 100)
         #expect(theme.cornerRadius(base: 14) == 28)
+        #expect(theme.morphedCornerRadius(base: 20, progress: 1.0, targetScale: 0.5) == 20)
+        #expect(theme.typeStyle(for: .headlineMedium, emphasized: true).isEmphasized)
+    }
+}
+
+// MARK: - M3 Expressive Components
+
+@Suite
+struct MaterialExpressiveComponentsTests {
+
+    @Test
+    func testLoadingIndicatorConfiguration() {
+        let def = MaterialLoadingIndicator()
+        #expect(def.shapes == AvatarShapeGenerator.loadingIndicatorCycle)
+        #expect(!def.contained)
+        #expect(def.size == 48)
+        #expect(def.isAnimating)
+
+        let custom = MaterialLoadingIndicator(shapes: [], contained: true, size: 8, isAnimating: false)
+        // Empty shapes fallback to loadingIndicatorCycle; size clamped to minimum 16
+        #expect(custom.shapes == AvatarShapeGenerator.loadingIndicatorCycle)
+        #expect(custom.contained)
+        #expect(custom.size == 16)
+        #expect(!custom.isAnimating)
+    }
+
+    @Test
+    func testSplitButtonConfiguration() {
+        var primaryTapped = false
+        var menuTapped = false
+        let button = MaterialSplitButton(
+            title: "Share",
+            icon: "square.and.arrow.up",
+            isMenuExpanded: true,
+            style: .tonal,
+            onPrimaryTap: { primaryTapped = true },
+            onMenuTap: { menuTapped = true }
+        )
+        #expect(button.title == "Share")
+        #expect(button.icon == "square.and.arrow.up")
+        #expect(button.isMenuExpanded)
+        #expect(button.style == .tonal)
+        button.onPrimaryTap()
+        button.onMenuTap()
+        #expect(primaryTapped)
+        #expect(menuTapped)
+    }
+
+    @Test
+    func testButtonGroupConfiguration() {
+        var tapped = false
+        let items = [
+            MaterialButtonGroupItem(title: "Day", icon: "sun.max", isSelected: true, onTap: { tapped = true }),
+            MaterialButtonGroupItem(title: "Week", onTap: {}),
+            MaterialButtonGroupItem(title: "Month", onTap: {})
+        ]
+        let group = MaterialButtonGroup(items: items)
+        #expect(group.items.count == 3)
+        #expect(group.items[0].isSelected)
+        group.items[0].onTap()
+        #expect(tapped)
+    }
+
+    @Test
+    func testFloatingToolbarConfiguration() {
+        var fabTapped = false
+        let items = [
+            MaterialToolbarItem(icon: "bold", label: "Bold", isActive: true, onTap: {}),
+            MaterialToolbarItem(icon: "italic", label: "Italic", isActive: false, onTap: {})
+        ]
+        let toolbar = MaterialFloatingToolbar(
+            items: items,
+            style: .vibrant,
+            isVertical: false,
+            fabIcon: "plus",
+            onFabTap: { fabTapped = true }
+        )
+        #expect(toolbar.items.count == 2)
+        #expect(toolbar.style == .vibrant)
+        #expect(!toolbar.isVertical)
+        #expect(toolbar.fabIcon == "plus")
+        toolbar.onFabTap?()
+        #expect(fabTapped)
+    }
+
+    @Test
+    func testPopoutExpressiveSpringHelpers() {
+        let _ = PopoutAnimationHelper.expressiveSpatialAnimation(scheme: .expressive)
+        let _ = PopoutAnimationHelper.expressiveEffectsAnimation(scheme: .standard)
     }
 }

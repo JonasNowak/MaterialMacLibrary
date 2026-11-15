@@ -177,6 +177,91 @@ struct MaterialTokensTests {
         let data = try JSONEncoder().encode(tokens)
         let decoded = try JSONDecoder().decode(MaterialShapeTokens.self, from: data)
         #expect(decoded == tokens)
+
+        // M3 Expressive corner morphing & optical inner radius
+        #expect(def.none == 0.0)
+        #expect(def.pressedCornerScale == 0.65)
+        #expect(def.selectedCornerScale == 0.50)
+        #expect(def.morphedRadius(base: 20.0, progress: 0.0) == 20.0)
+        #expect(def.morphedRadius(base: 20.0, progress: 1.0) == 13.0) // 20 * 0.65
+        #expect(def.morphedRadius(base: 20.0, progress: 1.0, targetScale: 0.5) == 10.0)
+        #expect(def.opticalInnerRadius(outerRadius: 24.0, padding: 6.0) == 18.0)
+        #expect(def.opticalInnerRadius(outerRadius: 4.0, padding: 10.0) == 0.0)
+    }
+
+    @Test
+    func testExpressiveMotionPhysicsAndSprings() throws {
+        // Expressive vs Standard spring specifications
+        let exp = MaterialMotionScheme.expressive
+        let std = MaterialMotionScheme.standard
+
+        #expect(exp.fastSpatial == MaterialSpringSpec(dampingRatio: 0.6, stiffness: 800))
+        #expect(exp.defaultSpatial == MaterialSpringSpec(dampingRatio: 0.8, stiffness: 380))
+        #expect(exp.slowSpatial == MaterialSpringSpec(dampingRatio: 0.8, stiffness: 200))
+        #expect(std.fastSpatial == MaterialSpringSpec(dampingRatio: 0.9, stiffness: 1400))
+        #expect(std.defaultSpatial == MaterialSpringSpec(dampingRatio: 0.9, stiffness: 700))
+        #expect(std.slowSpatial == MaterialSpringSpec(dampingRatio: 0.9, stiffness: 300))
+
+        // Effects springs are critically damped (ζ = 1.0, never overshoot)
+        #expect(exp.fastEffects == MaterialSpringSpec(dampingRatio: 1.0, stiffness: 3800))
+        #expect(exp.defaultEffects == MaterialSpringSpec(dampingRatio: 1.0, stiffness: 1600))
+        #expect(exp.slowEffects == MaterialSpringSpec(dampingRatio: 1.0, stiffness: 800))
+        #expect(exp.fastSpatial.allowsOvershoot)
+        #expect(!exp.fastEffects.allowsOvershoot)
+        #expect(exp.fastSpatial.response > 0)
+        #expect(exp.fastSpatial.damping > 0)
+
+        // Speed scaling scales stiffness by speed²
+        let doubleSpeed = exp.fastSpatial.scaled(by: 2.0)
+        #expect(doubleSpeed.stiffness == 3200.0)
+        #expect(doubleSpeed.dampingRatio == 0.6)
+
+        // Legacy JSON without `scheme` decodes to `.expressive`
+        let legacyJSON = try #require(##"{"animationSpeed":1.2,"reducedMotion":false}"##.data(using: .utf8))
+        let decodedLegacy = try JSONDecoder().decode(MaterialMotionTokens.self, from: legacyJSON)
+        #expect(decodedLegacy.scheme == .expressive)
+        #expect(decodedLegacy.animationSpeed == 1.2)
+    }
+
+    @Test
+    func testExpressiveTypographyScale() {
+        let typo = MaterialTypographyTokens()
+        #expect(MaterialTypeScaleRole.allCases.count == 15)
+        #expect(typo.allBaselineStyles.count == 15)
+        #expect(typo.allEmphasizedStyles.count == 15)
+        #expect(typo.allStyles.count == 30)
+
+        for role in MaterialTypeScaleRole.allCases {
+            let base = typo.style(for: role, emphasized: false)
+            let emp = typo.style(for: role, emphasized: true)
+            #expect(!base.isEmphasized)
+            #expect(emp.isEmphasized)
+            #expect(emp.size == base.size)
+            #expect(emp.lineHeight == base.lineHeight)
+            // Emphasized styles always carry heavier numeric weight and positive grade axis
+            #expect(emp.weightNumeric > base.weightNumeric)
+            #expect(emp.gradeAxis == 25.0)
+            #expect(base.gradeAxis == 0.0)
+        }
+    }
+
+    @Test
+    func testExpressivePaletteFixedAndSurfaceRoles() {
+        let dark = MaterialPalette.defaultDark
+        let light = MaterialPalette.defaultLight
+
+        // Fixed roles are invariant across light and dark palettes of the same theme
+        #expect(dark.primaryFixed == light.primaryFixed)
+        #expect(dark.primaryFixedDim == light.primaryFixedDim)
+        #expect(dark.secondaryFixed == light.secondaryFixed)
+        #expect(dark.tertiaryFixed == light.tertiaryFixed)
+
+        // Surface dim/bright/inverse roles resolve to valid hex colors
+        #expect(dark.surfaceDim.hex.hasPrefix("#"))
+        #expect(dark.surfaceBright.hex.hasPrefix("#"))
+        #expect(dark.inverseSurface == dark.onSurface)
+        #expect(light.surfaceDim.hex.hasPrefix("#"))
+        #expect(light.surfaceBright.hex.hasPrefix("#"))
     }
 
     @Test

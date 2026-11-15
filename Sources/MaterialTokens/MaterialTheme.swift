@@ -98,6 +98,37 @@ public final class MaterialTheme: ObservableObject {
     public var successContainer: Color { palette.successContainer.swiftUIColor }
     public var onSuccessContainer: Color { palette.onSuccessContainer.swiftUIColor }
 
+    // MARK: - M3 Expressive Extended Surface & Fixed Accent Colors
+
+    public var surfaceDim: Color { palette.surfaceDim.swiftUIColor }
+    public var surfaceBright: Color { palette.surfaceBright.swiftUIColor }
+    public var inverseSurface: Color { palette.inverseSurface.swiftUIColor }
+    public var inverseOnSurface: Color { palette.inverseOnSurface.swiftUIColor }
+
+    public var primaryFixed: Color { palette.primaryFixed.swiftUIColor }
+    public var primaryFixedDim: Color { palette.primaryFixedDim.swiftUIColor }
+    public var onPrimaryFixed: Color { palette.onPrimaryFixed.swiftUIColor }
+    public var onPrimaryFixedVariant: Color { palette.onPrimaryFixedVariant.swiftUIColor }
+
+    public var secondaryFixed: Color { palette.secondaryFixed.swiftUIColor }
+    public var secondaryFixedDim: Color { palette.secondaryFixedDim.swiftUIColor }
+    public var onSecondaryFixed: Color { palette.onSecondaryFixed.swiftUIColor }
+    public var onSecondaryFixedVariant: Color { palette.onSecondaryFixedVariant.swiftUIColor }
+
+    public var tertiaryFixed: Color { palette.tertiaryFixed.swiftUIColor }
+    public var tertiaryFixedDim: Color { palette.tertiaryFixedDim.swiftUIColor }
+    public var onTertiaryFixed: Color { palette.onTertiaryFixed.swiftUIColor }
+    public var onTertiaryFixedVariant: Color { palette.onTertiaryFixedVariant.swiftUIColor }
+
+    // MARK: - M3 Expressive Spring Animations
+
+    public var fastSpatialAnimation: Animation { motionTokens.fastSpatialAnimation }
+    public var defaultSpatialAnimation: Animation { motionTokens.defaultSpatialAnimation }
+    public var slowSpatialAnimation: Animation { motionTokens.slowSpatialAnimation }
+    public var fastEffectsAnimation: Animation { motionTokens.fastEffectsAnimation }
+    public var defaultEffectsAnimation: Animation { motionTokens.defaultEffectsAnimation }
+    public var slowEffectsAnimation: Animation { motionTokens.slowEffectsAnimation }
+
     // MARK: - Adaptive Surface Helpers
 
     /// Adaptive background for bar widget capsules and floating surfaces.
@@ -155,6 +186,28 @@ public final class MaterialTheme: ObservableObject {
     /// Scales a base corner radius through the shape tokens.
     public func cornerRadius(base: CGFloat) -> CGFloat {
         CGFloat(shapeTokens.scaled(Double(base)))
+    }
+
+    /// Interpolates a corner radius between its resting scaled radius and its M3 Expressive morphed target.
+    public func morphedCornerRadius(base: CGFloat, progress: CGFloat, targetScale: Double? = nil) -> CGFloat {
+        CGFloat(shapeTokens.morphedRadius(base: Double(base), progress: Double(progress), targetScale: targetScale))
+    }
+
+    /// Resolves the M3 Expressive type style (baseline or emphasized) for the given role.
+    public func typeStyle(for role: MaterialTypeScaleRole, emphasized: Bool = false) -> MaterialTypeStyle {
+        typographyTokens.style(for: role, emphasized: emphasized)
+    }
+
+    /// Resolves a SwiftUI `Font` for a Material 3 Expressive type scale role (baseline or emphasized).
+    public func font(for role: MaterialTypeScaleRole, emphasized: Bool = false) -> Font {
+        let style = typographyTokens.style(for: role, emphasized: emphasized)
+        let isDisplay = role == .displayLarge || role == .displayMedium || role == .displaySmall
+        return font(
+            size: CGFloat(style.size / max(0.01, typographyTokens.fontScale)),
+            weight: style.swiftUIWeight,
+            mono: false,
+            display: isDisplay && !emphasized
+        )
     }
 
     public func font(size: CGFloat, weight: Font.Weight = .regular, mono: Bool = false, display: Bool = false) -> Font {

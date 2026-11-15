@@ -30,6 +30,55 @@ struct MaterialShapesTests {
         expectFiniteNonEmpty(fallback, source: "avatar:fallback")
     }
 
+    // MARK: - M3 Expressive 35 Shapes & Morphing
+
+    @Test
+    func testAll35MaterialExpressiveShapes() {
+        #expect(MaterialExpressiveShape.allCases.count == 35)
+        #expect(AvatarShapeGenerator.expressiveShapeNames.count == 35)
+        for shape in MaterialExpressiveShape.allCases {
+            let path = AvatarShapeGenerator.path(for: shape, in: avatarRect)
+            expectFiniteNonEmpty(path, source: "expressive:\(shape.rawValue)")
+            // Also verify Compose name resolution (e.g. "Cookie4Sided", "Clover8Leaf", "VerySunny")
+            let resolved = MaterialExpressiveShape.resolve(shape.composeName)
+            #expect(resolved == shape, "composeName \(shape.composeName) did not resolve to \(shape.rawValue)")
+            let geo = GeometricAvatarShape(shape: shape)
+            #expect(!geo.path(in: avatarRect).isEmpty)
+        }
+    }
+
+    @Test
+    func testMaterialMorphingShapeAndMorphedPaths() {
+        let pairs: [(MaterialExpressiveShape, MaterialExpressiveShape)] = [
+            (.circle, .square),
+            (.softBurst, .cookie9),
+            (.pentagon, .pill),
+            (.sunny, .heart),
+            (.clover4, .puffyDiamond)
+        ]
+        for (from, to) in pairs {
+            for progress: CGFloat in [0.0, 0.25, 0.5, 0.75, 1.0] {
+                let cgPath = AvatarShapeGenerator.morphedPath(from: from, to: to, progress: progress, in: avatarRect)
+                expectFiniteNonEmpty(cgPath, source: "morph:\(from.rawValue)->\(to.rawValue)@\(progress)")
+                var morphShape = MaterialMorphingShape(from: from, to: to, progress: 0)
+                morphShape.animatableData = progress
+                #expect(morphShape.progress == progress)
+                let swiftUIPath = morphShape.path(in: avatarRect)
+                #expect(!swiftUIPath.isEmpty)
+            }
+        }
+
+        // Multi-shape loading indicator cycle morph
+        let cycle = AvatarShapeGenerator.loadingIndicatorCycle
+        #expect(cycle.count == 7)
+        for phase: CGFloat in [0.0, 1.3, 3.7, 6.9] {
+            let cycleShape = MaterialMorphingShape(shapes: cycle, progress: phase)
+            let p = cycleShape.path(in: avatarRect)
+            #expect(!p.isEmpty)
+            #expect(p.boundingRect.width > 0 && p.boundingRect.height > 0)
+        }
+    }
+
     @Test
     func testGeometricAvatarShape() {
         for shapeName in AvatarShapeGenerator.allShapeNames {

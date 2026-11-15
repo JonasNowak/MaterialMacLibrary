@@ -308,8 +308,104 @@ public extension MaterialPalette {
 
     var scrimColor: Color { scrim.swiftUIColor }
     var shadowColor: Color { shadow.swiftUIColor }
+
+    var surfaceDimColor: Color { surfaceDim.swiftUIColor }
+    var surfaceBrightColor: Color { surfaceBright.swiftUIColor }
+    var inverseSurfaceColor: Color { inverseSurface.swiftUIColor }
+    var inverseOnSurfaceColor: Color { inverseOnSurface.swiftUIColor }
+
+    var primaryFixedColor: Color { primaryFixed.swiftUIColor }
+    var primaryFixedDimColor: Color { primaryFixedDim.swiftUIColor }
+    var onPrimaryFixedColor: Color { onPrimaryFixed.swiftUIColor }
+    var onPrimaryFixedVariantColor: Color { onPrimaryFixedVariant.swiftUIColor }
+
+    var secondaryFixedColor: Color { secondaryFixed.swiftUIColor }
+    var secondaryFixedDimColor: Color { secondaryFixedDim.swiftUIColor }
+    var onSecondaryFixedColor: Color { onSecondaryFixed.swiftUIColor }
+    var onSecondaryFixedVariantColor: Color { onSecondaryFixedVariant.swiftUIColor }
+
+    var tertiaryFixedColor: Color { tertiaryFixed.swiftUIColor }
+    var tertiaryFixedDimColor: Color { tertiaryFixedDim.swiftUIColor }
+    var onTertiaryFixedColor: Color { onTertiaryFixed.swiftUIColor }
+    var onTertiaryFixedVariantColor: Color { onTertiaryFixedVariant.swiftUIColor }
 }
 #endif
+
+// MARK: - M3 Expressive Extended Surface & Fixed Accent Roles
+
+public extension MaterialPalette {
+    private func blend(_ a: MaterialColor, _ b: MaterialColor, t: Double) -> MaterialColor {
+        let clamped = min(1.0, max(0.0, t))
+        return MaterialColor(
+            red: a.red + (b.red - a.red) * clamped,
+            green: a.green + (b.green - a.green) * clamped,
+            blue: a.blue + (b.blue - a.blue) * clamped,
+            alpha: a.alpha + (b.alpha - a.alpha) * clamped
+        )
+    }
+
+    /// M3 Expressive dimmed surface role (N6 dark / N87 light).
+    var surfaceDim: MaterialColor {
+        isDark ? surface : blend(surfaceContainerHigh, surfaceContainerHighest, t: 0.65)
+    }
+
+    /// M3 Expressive bright surface role (N24 dark / N98 light).
+    var surfaceBright: MaterialColor {
+        isDark ? blend(surfaceContainerHighest, onSurface, t: 0.08) : surface
+    }
+
+    /// M3 Expressive inverse surface role (N90 dark / N20 light).
+    var inverseSurface: MaterialColor {
+        onSurface
+    }
+
+    /// M3 Expressive inverse on-surface role (N20 dark / N95 light).
+    var inverseOnSurface: MaterialColor {
+        surfaceContainerLow
+    }
+
+    // Primary Fixed (P90 / P80 / P10 / P30 invariant across light & dark)
+    var primaryFixed: MaterialColor {
+        isDark ? onPrimaryContainer : primaryContainer
+    }
+    var primaryFixedDim: MaterialColor {
+        isDark ? primary : inversePrimary
+    }
+    var onPrimaryFixed: MaterialColor {
+        isDark ? blend(onPrimary, MaterialColor("#000000"), t: 0.45) : onPrimaryContainer
+    }
+    var onPrimaryFixedVariant: MaterialColor {
+        isDark ? primaryContainer : blend(primary, onPrimaryContainer, t: 0.35)
+    }
+
+    // Secondary Fixed (S90 / S80 / S10 / S30 invariant across light & dark)
+    var secondaryFixed: MaterialColor {
+        isDark ? onSecondaryContainer : secondaryContainer
+    }
+    var secondaryFixedDim: MaterialColor {
+        isDark ? secondary : blend(secondaryContainer, secondary, t: 0.35)
+    }
+    var onSecondaryFixed: MaterialColor {
+        isDark ? blend(onSecondary, MaterialColor("#000000"), t: 0.45) : onSecondaryContainer
+    }
+    var onSecondaryFixedVariant: MaterialColor {
+        isDark ? secondaryContainer : blend(secondary, onSecondaryContainer, t: 0.35)
+    }
+
+    // Tertiary Fixed (T90 / T80 / T10 / T30 invariant across light & dark)
+    var tertiaryFixed: MaterialColor {
+        isDark ? onTertiaryContainer : tertiaryContainer
+    }
+    var tertiaryFixedDim: MaterialColor {
+        isDark ? tertiary : blend(tertiaryContainer, tertiary, t: 0.35)
+    }
+    var onTertiaryFixed: MaterialColor {
+        isDark ? blend(onTertiary, MaterialColor("#000000"), t: 0.45) : onTertiaryContainer
+    }
+    var onTertiaryFixedVariant: MaterialColor {
+        isDark ? tertiaryContainer : blend(tertiary, onTertiaryContainer, t: 0.35)
+    }
+}
 
 // MARK: - Stock fallback palettes
 

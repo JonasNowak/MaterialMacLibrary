@@ -240,6 +240,16 @@ public enum PopoutAnimationHelper {
         return .timingCurve(c.c1x, c.c1y, c.c2x, c.c2y, duration: duration)
     }
 
+    /// M3 Expressive spatial physics spring for popout protrusion (`defaultSpatial`: ζ=0.8, k=380).
+    public static func expressiveSpatialAnimation(scheme: MaterialMotionScheme = .expressive) -> Animation {
+        scheme.defaultSpatial.animation
+    }
+
+    /// M3 Expressive effects physics spring for popout opacity (`fastEffects`: ζ=1.0, k=3800, no overshoot).
+    public static func expressiveEffectsAnimation(scheme: MaterialMotionScheme = .expressive) -> Animation {
+        scheme.fastEffects.animation
+    }
+
     /// Scale factors (x, y) for the protrusion animation. On the axis perpendicular to the
     /// bar the popout grows from 0.05; along the bar axis it scales 0.94→1.0.
     public static func scale(isVerticalBar: Bool, presented: Bool) -> CGSize {

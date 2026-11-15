@@ -1,14 +1,17 @@
 import SwiftUI
 import MaterialTokens
+import MaterialShapes
 
 // MARK: - Header Action Button
 
-/// Circular icon-only header action button. Generalized from DMS `HeaderActionButton`.
+/// Circular icon-only header action button with M3 Expressive hover/press corner morphing.
+/// Generalized from DMS `HeaderActionButton`.
 public struct MaterialHeaderActionButton: View {
     public let icon: String
     public let action: () -> Void
 
     @Environment(\.materialTheme) private var theme: MaterialTheme
+    @State private var isHovered = false
 
     public init(icon: String, action: @escaping () -> Void) {
         self.icon = icon
@@ -19,18 +22,25 @@ public struct MaterialHeaderActionButton: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(theme.onSurfaceVariant)
+                .foregroundColor(isHovered ? theme.onSurface : theme.onSurfaceVariant)
                 .frame(width: 28, height: 28)
-                .background(Color.clear)
+                .background(
+                    RoundedRectangle(cornerRadius: isHovered ? 9 : 14, style: .continuous)
+                        .fill(isHovered ? theme.surfaceContainerHighest.opacity(0.65) : Color.clear)
+                )
+                .animation(theme.fastSpatialAnimation, value: isHovered)
         }
         .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 }
 
 // MARK: - Pill Slider
 
-/// Dual pill slider (pill track + fill + needle thumb). Generalized from DMS
-/// `ControlCenterPillSlider`.
+/// M3 Expressive dual pill slider (split track gap + stop dot + spring-animated vertical thumb).
+/// Generalized from DMS `ControlCenterPillSlider`.
 public struct MaterialPillSlider: View {
     public let icon: String
     public let value: Double
@@ -38,6 +48,7 @@ public struct MaterialPillSlider: View {
     public let onValueChanged: (Double) -> Void
 
     @Environment(\.materialTheme) private var theme: MaterialTheme
+    @State private var isDragging = false
 
     public init(
         icon: String,
@@ -70,32 +81,56 @@ public struct MaterialPillSlider: View {
                 let width = geo.size.width
                 let clampedVal = clampedValue
                 let fillWidth = width * CGFloat(clampedVal)
+                let thumbGap: CGFloat = 5.0
+                let activeWidth = max(0, fillWidth - thumbGap)
+                let inactiveWidth = max(0, width - fillWidth - thumbGap)
 
                 ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(theme.surfaceContainerHighest.opacity(0.85))
-                        .frame(height: 10)
+                    // Inactive remaining track segment (with M3 Expressive gap around handle)
+                    if inactiveWidth > 2 {
+                        Capsule()
+                            .fill(theme.surfaceContainerHighest.opacity(0.85))
+                            .frame(width: inactiveWidth, height: 10)
+                            .offset(x: width - inactiveWidth)
+                    }
 
-                    Capsule()
-                        .fill(theme.primary.opacity(0.85))
-                        .frame(width: max(0, fillWidth), height: 10)
+                    // Active filled track segment
+                    if activeWidth > 0 {
+                        Capsule()
+                            .fill(theme.primary.opacity(0.90))
+                            .frame(width: activeWidth, height: 10)
+                    }
 
+                    // M3 Expressive end-of-track stop indicator dot
+                    if clampedVal < 0.96 {
+                        Circle()
+                            .fill(theme.primary.opacity(0.55))
+                            .frame(width: 4, height: 4)
+                            .offset(x: max(0, width - 7))
+                    }
+
+                    // M3 Expressive vertical handle bar (expands vertically on drag)
                     Capsule()
-                        .fill(theme.onPrimary)
-                        .frame(width: 4, height: 16)
+                        .fill(theme.primary)
+                        .frame(width: 4, height: isDragging ? 20 : 16)
                         .offset(x: max(0, min(width - 4, fillWidth - 2)))
+                        .animation(theme.fastSpatialAnimation, value: isDragging)
                 }
                 .contentShape(Rectangle())
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { gesture in
                             guard width > 0 else { return }
+                            isDragging = true
                             let fraction = max(0.0, min(1.0, Double(gesture.location.x / width)))
                             onValueChanged(fraction)
                         }
+                        .onEnded { _ in
+                            isDragging = false
+                        }
                 )
             }
-            .frame(height: 18)
+            .frame(height: 20)
         }
         .frame(maxWidth: .infinity)
     }
@@ -103,7 +138,7 @@ public struct MaterialPillSlider: View {
 
 // MARK: - Tile
 
-/// Material 3 control-center tile with pill icon and clean labels.
+/// Material 3 Expressive control-center tile with shape-morphing pill icon and emphasized labels.
 /// Generalized from DMS `ControlCenterTile`.
 public struct MaterialTile: View {
     public let icon: String
@@ -144,7 +179,7 @@ public struct MaterialTile: View {
             } label: {
                 ZStack {
                     if isPillIcon && isActive {
-                        RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .fill(theme.primary)
                             .frame(width: 58, height: 32)
 
@@ -152,7 +187,8 @@ public struct MaterialTile: View {
                             .font(.system(size: 14, weight: .bold))
                             .foregroundColor(theme.onPrimary)
                     } else {
-                        Color.clear
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(theme.surfaceContainerHighest.opacity(0.45))
                             .frame(width: 58, height: 32)
 
                         Image(systemName: icon)
@@ -160,6 +196,7 @@ public struct MaterialTile: View {
                             .foregroundColor(theme.onSurfaceVariant)
                     }
                 }
+                .animation(theme.fastSpatialAnimation, value: isActive)
             }
             .buttonStyle(.plain)
 
@@ -191,11 +228,12 @@ public struct MaterialTile: View {
         .padding(.trailing, 8)
         .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44)
         .background(theme.surfaceContainerHigh)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: isActive ? 18 : 14, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: isActive ? 18 : 14, style: .continuous)
                 .stroke(theme.outlineVariant.opacity(0.15), lineWidth: 1)
         )
+        .animation(theme.fastSpatialAnimation, value: isActive)
     }
 }
 
@@ -294,7 +332,9 @@ public struct MaterialQuickTileItem: Identifiable {
     }
 }
 
-/// Compact circular/rounded icon button for `MaterialQuickTilesGrid`.
+/// Compact M3 Expressive icon button for `MaterialQuickTilesGrid`.
+/// Morphs its container shape from a circle (`16pt` radius) when inactive into an M3 Expressive
+/// squircle (`10pt` radius) when active, animated via `fastSpatialAnimation`.
 /// Generalized from DMS `QuickTileButton`.
 public struct MaterialQuickTileButton: View {
     public let item: MaterialQuickTileItem
@@ -315,11 +355,17 @@ public struct MaterialQuickTileButton: View {
                     .foregroundColor(item.isActive ? theme.onPrimary : theme.primary)
                     .frame(width: 32, height: 32)
                     .background(item.isActive ? theme.primary : theme.surfaceContainer)
-                    .clipShape(Circle())
+                    .clipShape(
+                        RoundedRectangle(
+                            cornerRadius: item.isActive ? 10 : 16,
+                            style: .continuous
+                        )
+                    )
+                    .animation(theme.fastSpatialAnimation, value: item.isActive)
 
                 Text(item.label)
-                    .font(.system(size: 9, weight: .medium, design: .rounded))
-                    .foregroundColor(theme.onSurfaceVariant)
+                    .font(.system(size: 9, weight: item.isActive ? .bold : .medium, design: .rounded))
+                    .foregroundColor(item.isActive ? theme.onSurface : theme.onSurfaceVariant)
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
@@ -523,10 +569,10 @@ public struct MaterialFloatingEditChrome: View {
 
 // MARK: - Hover Bounce
 
-/// Two-phase directional hover bounce matching upstream `DockHoverBounce.qml`.
-/// Displaces content toward screen center on hover:
+/// Directional hover bounce powered by M3 Expressive `fastSpatial` physics springs (ζ=0.6, k=800).
+/// Displaces content toward screen center on hover with natural spring overshoot:
 /// `position`: 0 = top, 1 = bottom, 2 = left, 3 = right.
-/// Generalized from DMS `DockHoverBounceModifier`; animation curves come from
+/// Generalized from DMS `DockHoverBounceModifier`; spring physics come from
 /// `@Environment(\.materialTheme)` motion tokens.
 public struct HoverBounceModifier: ViewModifier {
     public let isHovered: Bool
@@ -577,19 +623,13 @@ public struct HoverBounceModifier: ViewModifier {
                     return
                 }
                 if hovered {
-                    // Phase 1: emphasized acceleration toward screen center
-                    let curve = MaterialBezierCurve.emphasizedAccel
-                    withAnimation(.timingCurve(curve.c1x, curve.c1y, curve.c2x, curve.c2y, duration: 0.15 * theme.motionTokens.durShort / 0.2)) {
-                        bounceOffset = direction * Self.peakOffset
-                    }
-                    // Phase 2: settling to steady hover offset
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.timingCurve(0.05, 0.9, 0.1, 1.0, duration: 0.15)) {
-                            bounceOffset = direction * Self.restOffset
-                        }
+                    // M3 Expressive fastSpatial spring (ζ=0.6, k=800) naturally overshoots
+                    // toward peakOffset and settles at restOffset without manual timer chaining.
+                    withAnimation(theme.fastSpatialAnimation) {
+                        bounceOffset = direction * Self.restOffset
                     }
                 } else {
-                    withAnimation(.easeOut(duration: 0.15)) {
+                    withAnimation(theme.defaultSpatialAnimation) {
                         bounceOffset = 0
                     }
                 }
@@ -598,7 +638,7 @@ public struct HoverBounceModifier: ViewModifier {
 }
 
 public extension View {
-    /// Applies the two-phase directional hover bounce (toward screen center).
+    /// Applies the directional M3 Expressive spring hover bounce (toward screen center).
     func materialHoverBounce(isHovered: Bool, position: Int, enabled: Bool = true) -> some View {
         modifier(HoverBounceModifier(isHovered: isHovered, position: position, enabled: enabled))
     }
