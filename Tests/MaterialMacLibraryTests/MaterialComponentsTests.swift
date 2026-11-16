@@ -229,48 +229,14 @@ struct MaterialControlsTests {
 
     @Test
     func testFloatingEditChrome() {
-        #expect(MaterialEditChromeStyle.allCases.count == 2)
-
-        let bar = MaterialFloatingEditChrome(
-            title: "Edit Tiles",
+        let chrome = MaterialFloatingEditChrome(
             addTitle: "Add Tile",
             onAdd: {},
             onReset: {},
-            onDone: {},
-            style: .bar
+            onDone: {}
         )
-        #expect(bar.title == "Edit Tiles")
-        #expect(bar.addTitle == "Add Tile")
-        #expect(bar.onReset != nil)
-        #expect(bar.style == .bar)
-
-        let capsule = MaterialFloatingEditChrome(onAdd: {}, onDone: {}, style: .capsule)
-        #expect(capsule.title == nil)
-        #expect(capsule.onReset == nil)
-        #expect(capsule.style == .capsule)
-    }
-
-    @Test
-    func testHoverBounceMath() {
-        #expect(HoverBounceModifier.direction(for: 0) == 1.0)   // top
-        #expect(HoverBounceModifier.direction(for: 1) == -1.0)  // bottom
-        #expect(HoverBounceModifier.direction(for: 2) == 1.0)   // left
-        #expect(HoverBounceModifier.direction(for: 3) == -1.0)  // right
-
-        #expect(!HoverBounceModifier.isVerticalDock(position: 0))
-        #expect(!HoverBounceModifier.isVerticalDock(position: 1))
-        #expect(HoverBounceModifier.isVerticalDock(position: 2))
-        #expect(HoverBounceModifier.isVerticalDock(position: 3))
-
-        #expect(HoverBounceModifier.peakOffset == 2.5)
-        #expect(HoverBounceModifier.restOffset == 2.0)
-
-        let m = HoverBounceModifier(isHovered: true, position: 1, enabled: false)
-        #expect(m.isHovered)
-        #expect(m.position == 1)
-        #expect(!m.enabled)
-
-        let _ = Text("icon").materialHoverBounce(isHovered: true, position: 0)
+        #expect(chrome.addTitle == "Add Tile")
+        #expect(chrome.onReset != nil)
     }
 }
 

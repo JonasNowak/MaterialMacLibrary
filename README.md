@@ -28,7 +28,7 @@ And depend on the umbrella product or individual modules:
 
 - **`MaterialTokens`**: `MaterialColor`, `MaterialPalette`, `MaterialTheme` (`@Environment(\.materialTheme)`), `MaterialShapeTokens`, `MaterialBezierCurve`, `MaterialMotionTokens`, `MaterialTypographyTokens`, `MaterialSurfaceTokens`, `MaterialShadowTokens`, `MaterialDank16Palette`, `MaterialMatugenScheme`, `MaterialCornerStyle`.
 - **`MaterialShapes`**: `GothEarCornerShape`, `InvertedCutoutCornerShape`, `SegmentedPillShape`, `SlantedParallelogramShape`, `GeometricAvatarShape`, `AvatarShapeGenerator`, `WavyVisualizerRing`.
-- **`MaterialComponents`**: `VisualEffectBlur`, `GlassSurfaceBackground`, `MaterialSettingsCard`, `MaterialSegmentedControl`, `MaterialSliderRow`, `MaterialToggleRow`, `MaterialHeaderActionButton`, `MaterialPillSlider`, `MaterialTile`, `MaterialDetailPage`, `MaterialQuickTileItem`, `MaterialQuickTileButton`, `MaterialQuickTilesGrid`, `MaterialEditChromeStyle`, `MaterialFloatingEditChrome`, `HoverBounceModifier`, `SegmentedPillModifier`, `SquigglyProgressBar`, `MaterialToastCard`, `MaterialOSDPill`, `MaterialActionTile`, `MaterialPopoutSurfaceContainer`, `PopoutLayoutHelper`, `PopoutAnimationHelper`.
+- **`MaterialComponents`**: `VisualEffectBlur`, `GlassSurfaceBackground`, `MaterialSettingsCard`, `MaterialSegmentedControl`, `MaterialSliderRow`, `MaterialToggleRow`, `MaterialHeaderActionButton`, `MaterialPillSlider`, `MaterialTile`, `MaterialDetailPage`, `MaterialQuickTileItem`, `MaterialQuickTileButton`, `MaterialQuickTilesGrid`, `MaterialFloatingEditChrome`, `SegmentedPillModifier`, `SquigglyProgressBar`, `MaterialToastCard`, `MaterialOSDPill`, `MaterialActionTile`, `MaterialPopoutSurfaceContainer`, `PopoutLayoutHelper`, `PopoutAnimationHelper`.
 
 ## Usage
 
@@ -58,7 +58,7 @@ struct SettingsView: View {
 ./scripts/test.sh
 ```
 
-Runs the Swift Testing suite (`64` tests across `12` suites), supporting both full Xcode and Apple CommandLineTools toolchains.
+Runs the Swift Testing suite (`73` tests across `13` suites), supporting both full Xcode and Apple CommandLineTools toolchains.
 
 ## License
 

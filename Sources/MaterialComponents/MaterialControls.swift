@@ -399,115 +399,31 @@ public struct MaterialQuickTilesGrid: View {
 
 // MARK: - Floating Edit Chrome
 
-/// Visual style of `MaterialFloatingEditChrome`.
-public enum MaterialEditChromeStyle: String, Sendable, Codable, Equatable, CaseIterable {
-    /// Rounded-rectangle bottom toolbar (Control Center edit mode).
-    case bar
-    /// Capsule floating bar with drop shadow (Dock edit mode).
-    case capsule
-}
-
-/// Floating interactive edit bar generalizing DMS `CcEditChrome` (bar style with
-/// Add/Reset/Done) and `DockEditChrome` (capsule style with title/Add/Settings/Done).
+/// Floating interactive edit bar for Control Center edit mode (Add/Reset/Done),
+/// generalized from DMS `CcEditChrome`.
 /// All colors come from `@Environment(\.materialTheme)`.
 public struct MaterialFloatingEditChrome: View {
-    public let title: String?
     public let addTitle: String
     public let onAdd: () -> Void
     public let onReset: (() -> Void)?
     public let onDone: () -> Void
-    public let style: MaterialEditChromeStyle
 
     @Environment(\.materialTheme) private var theme: MaterialTheme
 
     public init(
-        title: String? = nil,
         addTitle: String = "Add",
         onAdd: @escaping () -> Void,
         onReset: (() -> Void)? = nil,
-        onDone: @escaping () -> Void,
-        style: MaterialEditChromeStyle = .bar
+        onDone: @escaping () -> Void
     ) {
-        self.title = title
         self.addTitle = addTitle
         self.onAdd = onAdd
         self.onReset = onReset
         self.onDone = onDone
-        self.style = style
     }
 
     public var body: some View {
-        if style == .capsule {
-            capsuleChrome
-        } else {
-            barChrome
-        }
-    }
-
-    private var capsuleChrome: some View {
-        HStack(spacing: 12) {
-            if let title = title {
-                Text(title)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundColor(theme.onPrimaryContainer)
-                    .padding(.horizontal, 6)
-            }
-
-            Button {
-                onAdd()
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "plus.circle.fill")
-                    Text(addTitle)
-                }
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(theme.onPrimary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(theme.primary)
-                .clipShape(Capsule())
-            }
-            .buttonStyle(.plain)
-
-            if let onReset = onReset {
-                Button {
-                    onReset()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "gearshape.fill")
-                        Text("Settings")
-                    }
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(theme.onSurface)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(theme.surfaceContainerHigh)
-                    .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-            }
-
-            Button {
-                onDone()
-            } label: {
-                Text("Done")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(theme.onSecondaryContainer)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 5)
-                    .background(theme.secondaryContainer)
-                    .clipShape(Capsule())
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(8)
-        .background(theme.surfaceContainer)
-        .clipShape(Capsule())
-        .overlay(
-            Capsule()
-                .stroke(theme.outlineVariant.opacity(0.3), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 4)
+        barChrome
     }
 
     private var barChrome: some View {
@@ -564,82 +480,5 @@ public struct MaterialFloatingEditChrome: View {
         .padding(.vertical, 6)
         .background(theme.surfaceContainerHigh)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-}
-
-// MARK: - Hover Bounce
-
-/// Directional hover bounce powered by M3 Expressive `fastSpatial` physics springs (ζ=0.6, k=800).
-/// Displaces content toward screen center on hover with natural spring overshoot:
-/// `position`: 0 = top, 1 = bottom, 2 = left, 3 = right.
-/// Generalized from DMS `DockHoverBounceModifier`; spring physics come from
-/// `@Environment(\.materialTheme)` motion tokens.
-public struct HoverBounceModifier: ViewModifier {
-    public let isHovered: Bool
-    public let position: Int // 0=top, 1=bottom, 2=left, 3=right
-    public let enabled: Bool
-
-    @Environment(\.materialTheme) private var theme: MaterialTheme
-    @State private var bounceOffset: CGFloat = 0.0
-
-    public init(isHovered: Bool, position: Int, enabled: Bool = true) {
-        self.isHovered = isHovered
-        self.position = position
-        self.enabled = enabled
-    }
-
-    /// Whether the dock position is vertical (left/right).
-    public static func isVerticalDock(position: Int) -> Bool {
-        position == 2 || position == 3
-    }
-
-    /// Bounce direction: +1 for Top/Left, -1 for Bottom/Right (always toward screen center).
-    public static func direction(for position: Int) -> CGFloat {
-        (position == 0 || position == 2) ? 1.0 : -1.0
-    }
-
-    /// Steady-state hover offset magnitude in points (20% of the 10pt travel).
-    public static var restOffset: CGFloat { 2.0 }
-    /// Peak transient offset magnitude in points (25% of the 10pt travel).
-    public static var peakOffset: CGFloat { 2.5 }
-
-    private var isVertical: Bool {
-        Self.isVerticalDock(position: position)
-    }
-
-    private var direction: CGFloat {
-        Self.direction(for: position)
-    }
-
-    public func body(content: Content) -> some View {
-        content
-            .offset(
-                x: isVertical ? bounceOffset : 0,
-                y: isVertical ? 0 : bounceOffset
-            )
-            .onChange(of: isHovered) { _, hovered in
-                guard enabled else {
-                    bounceOffset = 0
-                    return
-                }
-                if hovered {
-                    // M3 Expressive fastSpatial spring (ζ=0.6, k=800) naturally overshoots
-                    // toward peakOffset and settles at restOffset without manual timer chaining.
-                    withAnimation(theme.fastSpatialAnimation) {
-                        bounceOffset = direction * Self.restOffset
-                    }
-                } else {
-                    withAnimation(theme.defaultSpatialAnimation) {
-                        bounceOffset = 0
-                    }
-                }
-            }
-    }
-}
-
-public extension View {
-    /// Applies the directional M3 Expressive spring hover bounce (toward screen center).
-    func materialHoverBounce(isHovered: Bool, position: Int, enabled: Bool = true) -> some View {
-        modifier(HoverBounceModifier(isHovered: isHovered, position: position, enabled: enabled))
     }
 }
